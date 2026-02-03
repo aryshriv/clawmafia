@@ -9,6 +9,19 @@ dotenv.config({ path: path.resolve(process.cwd(), '.env') });
 
 const MONGODB_URI = process.env.MONGODB_URI;
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+const BASE_URL = process.env.BASE_URL || 'http://localhost:3000';
+
+async function setTyping(gameId: string, playerName: string | null) {
+  try {
+    await fetch(`${BASE_URL}/api/debug/typing`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ gameId, playerName }),
+    });
+  } catch (e) {
+    // ignore
+  }
+}
 
 if (!MONGODB_URI) {
   console.error('❌ MONGODB_URI is missing.');
@@ -184,19 +197,28 @@ async function main() {
             }
 
             console.log(`${agent.name} (${role}): Thinking...`);
-            const decision = await getAgentAction(agent.name, augmentedStatus);
-            
-            if (decision.action !== 'wait' && decision.action !== 'none') {
-                console.log(`${agent.name} performs ${decision.action} on ${decision.targetId} (${decision.reason})`);
-                try {
-                    await gameService.performAction(apiKey, decision.action, decision.targetId, decision.reason);
-                } catch (e: any) {
-                    console.error(`Action failed: ${e.message}`);
+            await setTyping(status.id, agent.name);
+            // Give the UI time to poll and show "X is typing..."
+            await new Promise(r => setTimeout(r, 800));
+            try {
+                const decision = await getAgentAction(agent.name, augmentedStatus);
+
+                if (decision.action !== 'wait' && decision.action !== 'none') {
+                    console.log(`${agent.name} performs ${decision.action} on ${decision.targetId} (${decision.reason})`);
+                    try {
+                        await gameService.performAction(apiKey, decision.action, decision.targetId, decision.reason);
+                    } catch (e: any) {
+                        console.error(`Action failed: ${e.message}`);
+                    }
                 }
+            } finally {
+                await setTyping(status.id, null);
             }
+            // Pause between agents so the UI can show each "typing" and message
+            await new Promise(r => setTimeout(r, 3000));
         }
         
-        // Wait 5 seconds
+        // Wait 12 seconds between phase advances so the UI can follow along
         await new Promise(r => setTimeout(r, 5000));
         
         // Advance games

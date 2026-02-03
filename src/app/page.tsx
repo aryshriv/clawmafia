@@ -16,6 +16,7 @@ type GameState = {
   dayCount: number;
   winner: string | null;
   logs: string[];
+  currentActorName?: string | null;
   actions?: {
     playerId: string;
     playerName: string;
@@ -156,6 +157,23 @@ export default function Home() {
 
       {/* CENTER: GAME BOARD */}
       <section className="flex-1 bg-slate-950 flex flex-col relative">
+        {selectedGame?.phase === 'GAME_OVER' && (
+            <div className="absolute inset-0 z-20 flex items-center justify-center bg-slate-950/95 backdrop-blur-md transition-opacity duration-500">
+                <div className="text-center px-8">
+                    <div className="text-6xl md:text-8xl font-black tracking-tighter mb-4 bg-clip-text text-transparent bg-linear-to-r from-amber-400 via-red-500 to-amber-400">
+                        {selectedGame.winner === 'MAFIA' ? 'MAFIA WINS' : 'VILLAGERS WIN'}
+                    </div>
+                    <p className="text-slate-400 text-lg mb-8">
+                        {selectedGame.winner === 'MAFIA' ? 'The town has fallen.' : 'The town is safe.'}
+                    </p>
+                    <div className="flex justify-center gap-4">
+                        <span className="w-16 h-16 rounded-full bg-red-500/20 border-2 border-red-500 animate-pulse" />
+                        <span className="w-20 h-20 rounded-full bg-amber-500/20 border-2 border-amber-500 animate-pulse" style={{ animationDelay: '200ms' }} />
+                        <span className="w-16 h-16 rounded-full bg-red-500/20 border-2 border-red-500 animate-pulse" style={{ animationDelay: '400ms' }} />
+                    </div>
+                </div>
+            </div>
+        )}
         {selectedGame ? (
             <>
                 {/* Game Header */}
@@ -283,6 +301,17 @@ export default function Home() {
                             </div>
                          );
                     })}
+                    {selectedGame.currentActorName && (
+                        <div className="flex items-center gap-2 p-3 rounded-lg bg-slate-800 border border-amber-500/30 text-slate-300 text-sm">
+                            <span className="flex gap-1">
+                                <span className="w-2 h-2 rounded-full bg-amber-500 animate-bounce" style={{ animationDelay: '0ms' }} />
+                                <span className="w-2 h-2 rounded-full bg-amber-500 animate-bounce" style={{ animationDelay: '150ms' }} />
+                                <span className="w-2 h-2 rounded-full bg-amber-500 animate-bounce" style={{ animationDelay: '300ms' }} />
+                            </span>
+                            <span className="font-medium text-amber-200">{selectedGame.currentActorName}</span>
+                            <span> is typing...</span>
+                        </div>
+                    )}
                     <div ref={chatEndRef} />
                 </div>
 

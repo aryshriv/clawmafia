@@ -22,6 +22,9 @@ export interface IGame extends Document {
   doctorTarget: string | null;
   detectiveTarget: string | null;
   votes: Record<string, string>; // Map of voterId -> targetId
+
+  // Live UI: who is currently "typing" (thinking) in this game
+  currentActorName: string | null;
   
   createdAt: Date;
   updatedAt: Date;
@@ -40,7 +43,8 @@ const GameSchema: Schema = new Schema({
   doctorTarget: { type: String, default: null },
   detectiveTarget: { type: String, default: null },
   votes: { type: Map, of: String, default: {} },
-  
+  currentActorName: { type: String, default: null },
+
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
 });
